@@ -1,12 +1,23 @@
 package foobar
 
-import "strconv"
+import (
+	"strconv"
+)
+
+type Intner interface {
+	Intn(n int) int
+}
+
+func RandomFooBar(r Intner) string {
+	n := r.Intn(50) + 1
+	return say(n)
+}
 
 func SayAny(i interface{}) string {
-	if v, ok := i.(int); ok {
+	switch v := i.(type) {
+	case int:
 		return say(v)
-	}
-	if v, ok := i.(string); ok {
+	case string:
 		n, err := strconv.Atoi(v)
 		if err != nil {
 			n = 0

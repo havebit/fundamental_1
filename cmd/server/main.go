@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"hello/foobar"
 	"log"
 	"net/http"
+	"strings"
 )
 
 var port = ":8081"
@@ -13,15 +15,17 @@ func main() {
 		log.Println("ok")
 	}()
 
-	http.HandleFunc("/hello", helloHandler)
+	http.HandleFunc("/foobar/", foobarHandler)
 	log.Println("listening on", port)
 	if err := http.ListenAndServe(port, nil); err != nil {
 		log.Panic(err)
 	}
 }
 
-func helloHandler(w http.ResponseWriter, req *http.Request) {
+func foobarHandler(w http.ResponseWriter, req *http.Request) {
+	param := strings.TrimPrefix(req.RequestURI, "/foobar/")
+
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "hello world!!",
+		"foobar": foobar.SayAny(param),
 	})
 }

@@ -29,3 +29,23 @@ func TestFooBar(t *testing.T) {
 		})
 	}
 }
+
+type fakeIntn int
+
+func (i fakeIntn) Intn(n int) int {
+	return int(i)
+}
+
+func TestRandomFooBar(t *testing.T) {
+	// src := rand.NewSource(time.Now().UnixNano())
+	// r := rand.New(src)
+
+	want := "Foo-Bar-14-Foo"
+	var fake fakeIntn = 2
+
+	get := RandomFooBar(fake)
+
+	if want != get {
+		t.Errorf("given random returns 2 want %q but got %q\n", want, get)
+	}
+}
