@@ -2,15 +2,30 @@ package foobar
 
 import "strconv"
 
+func SayAny(i interface{}) string {
+	if v, ok := i.(int); ok {
+		return say(v)
+	}
+	if v, ok := i.(string); ok {
+		n, err := strconv.Atoi(v)
+		if err != nil {
+			n = 0
+		}
+		return say(n)
+	}
+
+	return ""
+}
+
 func say(given int) string {
-
-	if given == 5 {
+	switch {
+	case given%15 == 0:
+		return "FooBar"
+	case given%5 == 0:
 		return "Bar"
-	}
-
-	if given%3 == 0 {
+	case given%3 == 0:
 		return "Foo"
+	default:
+		return strconv.Itoa(given)
 	}
-
-	return strconv.Itoa(given)
 }

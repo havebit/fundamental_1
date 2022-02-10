@@ -6,10 +6,18 @@ import (
 	"net/http"
 )
 
+var port = ":8081"
+
 func main() {
-	// Hello world, the web server
+	defer func() {
+		log.Println("ok")
+	}()
+
 	http.HandleFunc("/hello", helloHandler)
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	log.Println("listening on", port)
+	if err := http.ListenAndServe(port, nil); err != nil {
+		log.Panic(err)
+	}
 }
 
 func helloHandler(w http.ResponseWriter, req *http.Request) {
