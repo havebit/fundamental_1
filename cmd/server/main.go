@@ -2,10 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"hello/foobar"
 	"log"
 	"net/http"
-	"strings"
+	"time"
+
+	"hello/foobar"
+
+	"github.com/gorilla/mux"
 )
 
 var port = ":8081"
@@ -15,17 +18,27 @@ func main() {
 		log.Println("ok")
 	}()
 
-	http.HandleFunc("/foobar/", foobarHandler)
+	r := mux.NewRouter()
+
+	r.HandleFunc("/foobar/{param}", foobarHandler).Methods(http.MethodGet)
+
+	srv := &http.Server{
+		Handler: r,
+		Addr:    port,
+		// Good practice: enforce timeouts for servers you create!
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
+
 	log.Println("listening on", port)
-	if err := http.ListenAndServe(port, nil); err != nil {
+	if err := srv.ListenAndServe(); err != nil {
 		log.Panic(err)
 	}
 }
 
-func foobarHandler(w http.ResponseWriter, req *http.Request) {
-	param := strings.TrimPrefix(req.RequestURI, "/foobar/")
-
+func foobarHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 	json.NewEncoder(w).Encode(map[string]string{
-		"foobar": foobar.SayAny(param),
+		"foobar": foobar.SayAny(vars["param"]),
 	})
 }

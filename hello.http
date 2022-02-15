@@ -1,5 +1,36 @@
+@base_url=http://localhost:8081
+
 OPTIONS http://localhost:8081/hello
 
 ###
 
-GET http://localhost:8081/foobar/15
+GET http://localhost:8081/foobar/5
+
+###
+
+GET http://localhost:8081/ping
+
+###
+
+POST http://localhost:8081/todos
+Content-Type: application/json
+
+{
+    "text": "learn Go"
+}
+
+###
+GET http://localhost:8081/todos
+Content-Type: application/json
+
+###
+PUT http://localhost:8081/todos/1
+Content-Type: application/json
+
+###
+DELETE http://localhost:8081/todos/1
+Content-Type: application/json
+
+###
+GET http://localhost:8082/infoz
+
