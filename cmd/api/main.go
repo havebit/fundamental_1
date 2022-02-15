@@ -8,12 +8,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
-	"golang.org/x/time/rate"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 const defaultPort = ":8081"
@@ -37,23 +40,22 @@ func main() {
 	}
 	defer os.Remove("/tmp/live")
 
-	r := gin.Default()
-	r.GET("/ping", pingPongHandler)
-	r.GET("/infoz", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"builddate": builddate,
-		})
-	})
+	dsn := "host=localhost user=postgres password=mysecretpassword dbname=myapp port=5432"
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Panic(err)
+	}
+	db.AutoMigrate(&todo.Todo{})
 
-	limiter := rate.NewLimiter(5, 5)
-	r.GET("/limitz", func(c *gin.Context) {
-		if !limiter.Allow() {
-			c.Status(http.StatusTooManyRequests)
-			return
-		}
-		c.Status(http.StatusOK)
-	})
-	r.POST("/todos", todo.NewTaskTodoHandler)
+	r := gin.Default()
+
+	r.POST("/logins", loginHandler)
+
+	protectRounter := r.Group("")
+
+	todoHandler := todo.NewHandler(db)
+	protectRounter.POST("/todos", todoHandler.NewTaskTodoHandler)
+	protectRounter.GET("/todos", todoHandler.ListTaskTodoHandler)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -82,6 +84,55 @@ func main() {
 	}
 
 	log.Println("Server exiting")
+}
+
+type Credential struct {
+	Account  string
+	Password string
+}
+
+var mySigningKey = []byte("AllYourBase")
+
+func authenMiddleware(c *gin.Context) {
+	bearer := c.Request.Header.Get("Authorization")
+	//"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwYWxsYXQiLCJleHAiOjE2NDQ5MTAzNTV9.THHGbJhNLMq522iBu72WZUV2vd0obkkf3hZtkUA3SdE"
+	tokenString := strings.TrimPrefix(bearer, "Bearer ")
+	_, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return mySigningKey, nil
+	})
+	if err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	c.Next()
+}
+
+func loginHandler(c *gin.Context) {
+	var cred Credential
+	if err := c.Bind(&cred); err != nil {
+		return
+	}
+
+	claims := &jwt.StandardClaims{
+		ExpiresAt: time.Now().Add(time.Minute * 2).Unix(),
+		Audience:  cred.Account,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	ss, err := token.SignedString(mySigningKey)
+	if err != nil {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": ss,
+	})
 }
 
 func pingPongHandler(c *gin.Context) {

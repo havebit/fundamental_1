@@ -1,31 +1,46 @@
 package todo
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type Todo struct {
-	ID    int
+	gorm.Model
 	Title string `json:"text" binding:"required"`
 	Done  bool
 }
 
-var index int = 0
-var database = map[int]Todo{}
+func (Todo) TableName() string {
+	return "todos"
+}
 
-func NewTaskTodoHandler(c *gin.Context) {
+type Handler struct {
+	db *gorm.DB
+}
+
+func NewHandler(db *gorm.DB) *Handler {
+	return &Handler{db: db}
+}
+
+func (h *Handler) NewTaskTodoHandler(c *gin.Context) {
 	var todo Todo
 	if err := c.Bind(&todo); err != nil {
 		return
 	}
 
-	index++
-	todo.ID = index
-	database[index] = todo
+	// h.db.Find()
+	if err := h.db.Create(&todo).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
 
-	fmt.Println(database)
 	c.Status(http.StatusCreated)
+}
+
+func (h *Handler) ListTaskTodoHandler(c *gin.Context) {
 }

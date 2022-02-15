@@ -12,16 +12,18 @@ GET http://localhost:8081/ping
 
 ###
 
-POST http://localhost:8081/todos
+POST http://localhost:8082/todos
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwYWxsYXQiLCJleHAiOjE2NDQ5MTU2ODd9.5jnJpuUcYiInJ4iPFkPnUtUzCjb11uKn0L4a6AgZiBU
 
 {
-    "text": "learn Go"
+    "text": "learn Java"
 }
 
 ###
-GET http://localhost:8081/todos
+GET http://localhost:8082/todos
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJwYWxsYXQiLCJleHAiOjE2NDQ5MTQ5NzR9.Lx-aVg0rGTXQeTPGsGMyovat3ErSmUj2neFu66EVRfw
 
 ###
 PUT http://localhost:8081/todos/1
@@ -32,5 +34,14 @@ DELETE http://localhost:8081/todos/1
 Content-Type: application/json
 
 ###
-GET http://localhost:8082/infoz
+GET http://localhost:8081/infoz
 
+###
+
+POST http://localhost:8082/logins
+Content-Type: application/json
+
+{
+    "account": "pallat",
+    "password": "abcdefg"
+}
